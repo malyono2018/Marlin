@@ -145,7 +145,7 @@
   #define BTN_EN1                           PB10
   #define BTN_EN2                           PA6
 
-#elif ENABLED(DWIN_CREALITY_LCD)
+#elif ENABLED(DWIN_CREALITY_LCD)  //this is the default OEM one
 
   /* RET6 DWIN ENCODER LCD */
   #define BTN_ENC                           PB14
