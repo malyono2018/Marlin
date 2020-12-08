@@ -1,6 +1,6 @@
 #
-# comment-pr.yml
-# Add a comment to any PR directed to a release branch
+# check-pr.yml
+# Close PRs directed at release branches
 #
 
 name: PR Bad Target
@@ -14,8 +14,9 @@ on:
 
 jobs:
   bad_target:
-
     name: PR Bad Target
+    if: github.repository == 'MarlinFirmware/Marlin'
+
     runs-on: ubuntu-latest
 
     steps:
