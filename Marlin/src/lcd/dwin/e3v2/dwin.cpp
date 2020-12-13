@@ -86,7 +86,7 @@
 #endif
 
 #ifndef MACHINE_SIZE
-  #define MACHINE_SIZE "220x220x250"
+  #define MACHINE_SIZE "183x220x200"
 #endif
 #ifndef CORP_WEBSITE_C
   #define CORP_WEBSITE_C "www.cxsw3d.com"
@@ -130,7 +130,7 @@
 #define MIN_MAXJERK           0.1
 #define MIN_STEP              1
 
-#define FEEDRATE_E      (60)
+#define FEEDRATE_E      (100)  //60
 
 // Mininum unit (0.1) : multiple (10)
 #define MINUNITMULT     10
@@ -1230,25 +1230,40 @@ void HMI_Move_Z() {
   void HMI_Move_E() {
     static float last_E_scale = 0;
     ENCODER_DiffState encoder_diffState = Encoder_ReceiveAnalyze();
-    if (encoder_diffState != ENCODER_DIFF_NO) {
-      if (Apply_Encoder(encoder_diffState, HMI_ValueStruct.Move_E_scale)) {
+    if (encoder_diffState != ENCODER_DIFF_NO) { //if encoder action has performed (has moved or pressed)
+      if (Apply_Encoder(encoder_diffState, HMI_ValueStruct.Move_E_scale)) { //if enter is pressed
         checkkey = AxisMove;
         EncoderRate.enabled = false;
         last_E_scale = HMI_ValueStruct.Move_E_scale;
-        DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale);
+        
         if (!planner.is_full()) {
           planner.synchronize(); // Wait for planner moves to finish!
-          planner.buffer_line(current_position, MMM_TO_MMS(FEEDRATE_E), active_extruder);
+          current_position.e = current_position.e + HMI_ValueStruct.Move_E_scale/10; //make move relative
+          planner.buffer_line(current_position, MMM_TO_MMS(FEEDRATE_E), active_extruder); //send command to printer
+          HMI_ValueStruct.Move_E_scale=0; //reset relative move to 0
+          
         }
+        DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale); //(size, color, iNum(num whole digits), fNum (num decimal  digits), x,y,value) //display scaler
+        DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 150, MBASE(4), current_position.e*10); //(size, color, iNum, fNum, x,y,value) //display current position
         DWIN_UpdateLCD();
         return;
       }
-      if ((HMI_ValueStruct.Move_E_scale - last_E_scale) > (EXTRUDE_MAXLENGTH) * MINUNITMULT)
+
+      //if encoder is rotated...
+      /*
+      if ((HMI_ValueStruct.Move_E_scale - last_E_scale) > (EXTRUDE_MAXLENGTH) * MINUNITMULT) // checking if move is too large
         HMI_ValueStruct.Move_E_scale = last_E_scale + (EXTRUDE_MAXLENGTH) * MINUNITMULT;
-      else if ((last_E_scale - HMI_ValueStruct.Move_E_scale) > (EXTRUDE_MAXLENGTH) * MINUNITMULT)
+      else if ((last_E_scale - HMI_ValueStruct.Move_E_scale) > (EXTRUDE_MAXLENGTH) * MINUNITMULT) // checking if move is too large
         HMI_ValueStruct.Move_E_scale = last_E_scale - (EXTRUDE_MAXLENGTH) * MINUNITMULT;
-      current_position.e = HMI_ValueStruct.Move_E_scale / 10;
-      DWIN_Draw_Signed_Float(font8x16, Select_Color, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale);
+      
+      current_position.e = HMI_ValueStruct.Move_E_scale / 10; //update new position, why divide by 10? its a float?
+      */
+     if (HMI_ValueStruct.Move_E_scale> (EXTRUDE_MAXLENGTH) * MINUNITMULT){
+        HMI_ValueStruct.Move_E_scale = EXTRUDE_MAXLENGTH * MINUNITMULT;
+     }
+
+      DWIN_Draw_Signed_Float(font8x16, Select_Color, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale); //(size, color, iNum, fNum, x,y,value) //display scaler
+      DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 150, MBASE(4), current_position.e*10); //(size, color, iNum, fNum, x,y,value) //display current position
       DWIN_UpdateLCD();
     }
   }
@@ -2325,7 +2340,8 @@ void HMI_Prepare() {
         #if HAS_HOTEND
           queue.inject_P(PSTR("G92 E0"));
           current_position.e = HMI_ValueStruct.Move_E_scale = 0;
-          DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 216, MBASE(4), 0);
+          DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 216, MBASE(4), 0);  //default draw extruder position
+          DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 150, MBASE(4), current_position.e*10); //(size, color, iNum, fNum, x,y,value) //display current position
         #endif
         break;
       case PREPARE_CASE_DISA: // Disable steppers
@@ -2580,7 +2596,8 @@ void HMI_AxisMove() {
         DWIN_Draw_FloatValue(true, true, 0, font8x16, Color_White, Color_Bg_Black, 3, 1, 216, MBASE(1), HMI_ValueStruct.Move_X_scale);
         DWIN_Draw_FloatValue(true, true, 0, font8x16, Color_White, Color_Bg_Black, 3, 1, 216, MBASE(2), HMI_ValueStruct.Move_Y_scale);
         DWIN_Draw_FloatValue(true, true, 0, font8x16, Color_White, Color_Bg_Black, 3, 1, 216, MBASE(3), HMI_ValueStruct.Move_Z_scale);
-        DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 216, MBASE(4), 0);
+        DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 216, MBASE(4), 0); //extruder position
+        DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 150, MBASE(4), current_position.e*10);
         DWIN_UpdateLCD();
       }
       return;
@@ -2623,6 +2640,10 @@ void HMI_AxisMove() {
         #if HAS_HOTEND
           case 4: // Extruder
             // window tips
+
+            DWIN_Draw_Signed_Float(font8x16, Select_Color, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale);
+            DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 150, MBASE(4), current_position.e*10); //(size, color, iNum, fNum, x,y,value) //display current position
+
             #ifdef PREVENT_COLD_EXTRUSION
               if (thermalManager.temp_hotend[0].celsius < EXTRUDE_MINTEMP) {
                 HMI_flag.ETempTooLow_flag = true;
@@ -2632,8 +2653,9 @@ void HMI_AxisMove() {
               }
             #endif
             checkkey = Extruder;
-            HMI_ValueStruct.Move_E_scale = current_position.e * MINUNITMULT;
-            DWIN_Draw_Signed_Float(font8x16, Select_Color, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale);
+            //HMI_ValueStruct.Move_E_scale = current_position.e * MINUNITMULT;
+            //DWIN_Draw_Signed_Float(font8x16, Select_Color, 3, 1, 216, MBASE(4), HMI_ValueStruct.Move_E_scale);
+            //DWIN_Draw_Signed_Float(font8x16, Color_Bg_Black, 3, 1, 150, MBASE(4), current_position.e*10); //(size, color, iNum, fNum, x,y,value) //display current position
             EncoderRate.enabled = true;
             break;
         #endif
