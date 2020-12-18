@@ -495,7 +495,7 @@
     #define DEFAULT_Kd_LIST { 114.00, 114.00 }
   #else
   // Ender 3 v2
-    #define DEFAULT_Kp 30 //28.72
+    #define DEFAULT_Kp 26 //28.72
     #define DEFAULT_Ki 4  //2.62
     #define DEFAULT_Kd 2 //78.81  20
   #endif
@@ -739,7 +739,7 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 279 } //deefualt E=93, 3x for bmg = 279
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 418 } //deefualt E=93, 3x for bmg = 421.9 for bmg
 
 /**
  * Default Max Feed Rate (mm/s)
@@ -994,7 +994,7 @@
  *     |    [-]    |
  *     O-- FRONT --+
  */
-#define NOZZLE_TO_PROBE_OFFSET { 33.64, 3.78, -3.50 }
+#define NOZZLE_TO_PROBE_OFFSET { 33.64, 3.78, -3.45 }
 
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
@@ -1130,7 +1130,7 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 183
+#define X_BED_SIZE 220
 #define Y_BED_SIZE 220
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
